@@ -31,7 +31,7 @@
           <img src = {{tweet.pictureurl}}>
           <div class="content">
             <p class="by"><a href="/users/{{tweet.name}}">{{tweet.name}}</a></p>
-            <p><a href="/tweets/{{tweet.id}}">{{tweet.content}}</a></p>
+            <p><a href="/tweets/{{tweet.id}}">{{tweet.content}}</a> <a href="/hashtag/{{tweet.hashtag}}">{{tweet.hashtag}}</a></p>
           </div>
         </div>
       {% endfor %}

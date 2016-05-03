@@ -7,7 +7,7 @@ module.exports = function makeRouterWithSockets(io, client) {
 
     router.get('/', function(req, res, next) {
 
-        client.query('SELECT * FROM tweets INNER JOIN users ON tweets.userid = users.id', function(err, results) {
+        client.query('SELECT tweets.content, tweets.id, tweets.userid, users.name, users.pictureurl FROM tweets INNER JOIN users ON tweets.userid = users.id', function(err, results) {
             var tweets = results.rows;
             res.render('index', { title: 'Twitter.js', tweets: tweets, showForm: true });
 
@@ -16,8 +16,11 @@ module.exports = function makeRouterWithSockets(io, client) {
 
     router.get('/tweets', function(req, res, next) {
 
-        client.query('SELECT * FROM tweets INNER JOIN users ON tweets.userid = users.id', function(err, results) {
+        client.query('SELECT tweets.content, tweets.id, tweets.userid, users.name, users.pictureurl  FROM tweets INNER JOIN users ON tweets.userid = users.id', function(err, results) {
             var tweets = results.rows;
+            //console.log(tweets);
+//            var contentArray = tweets.content.split("#"+tweets.hashtag);
+            //console.log(contentArray);
             res.render('index', { title: 'Twitter.js', tweets: tweets, showForm: true });
 
         });
@@ -37,8 +40,8 @@ module.exports = function makeRouterWithSockets(io, client) {
     });
 
     router.get('/tweets/:id', function(req, res, next) {
-        client.query('SELECT * FROM tweets INNER JOIN users ON tweets.userid = users.id WHERE tweets.id= $1', [req.params.id], function(err, results) {
-
+        client.query('SELECT tweets.content, tweets.id, tweets.userid, users.name, users.pictureurl FROM tweets INNER JOIN users ON tweets.userid = users.id WHERE tweets.id= $1', [req.params.id], function(err, results) {
+            console.log(results.rows);
             var tweets = results.rows;
 
             res.render('index', { title: 'Twitter.js', tweets: tweets, showForm: true });
@@ -73,11 +76,29 @@ module.exports = function makeRouterWithSockets(io, client) {
     router.post('/tweets', function(req, res, next) {
         findOrCreate(req.body.name)
             .then(function(userid) {
-                client.query('INSERT INTO tweets (userId, content) VALUES ($1, $2)', [userid, req.body.text], function(err, results2) {
+
+                var hashtag = req.body.text.match(/#(\w+)/i)[1] || null;
+                console.log("#", hashtag);
+
+                client.query('INSERT INTO tweets (userId, content, hashtag) VALUES ($1, $2, $3)', [userid, req.body.text, hashtag], function(err, results2) {
                     res.redirect('/');
                 });
             });
     });
+
+    router.get('/hashtag/:tag', function(req, res, next) {
+        client.query('SELECT * FROM tweets INNER JOIN users ON tweets.userid = users.id WHERE tweets.hashtag = $1', [req.params.tag], function(err, results) {
+            var tweets = results.rows;
+            res.render('index', {
+                title: 'Twitter.js',
+                tweets: tweets,
+                showForm: true,
+                hashtag: req.params.tag
+
+            });
+        });
+    });
+
 
     return router;
 }
